@@ -23,7 +23,6 @@ public class SeasonsManager {
         this.seasonDurationTicks = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.season_duration_ticks");
         currentSeason = SeasonsList.Seasons.SPRING;
         scheduleSeasonChange();
-
     }
 
     public static SeasonsManager getInstance(){
@@ -33,7 +32,7 @@ public class SeasonsManager {
         return instance;
     }
 
-    private void scheduleSeasonChange(){
+    public void scheduleSeasonChange(){
         new BukkitRunnable(){
             @Override
             public void run(){

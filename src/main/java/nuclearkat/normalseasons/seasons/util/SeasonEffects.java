@@ -3,6 +3,7 @@ package nuclearkat.normalseasons.seasons.util;
 import nuclearkat.normalseasons.NormalSeasons;
 import nuclearkat.normalseasons.seasons.SeasonsList;
 import nuclearkat.normalseasons.seasons.SeasonsManager;
+import nuclearkat.normalseasons.seasons.TemperatureManager;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -123,6 +124,9 @@ public class SeasonEffects {
         springTask = new BukkitRunnable() {
             @Override
             public void run() {
+                if (player.getWorld().hasStorm()){
+                    player.getWorld().setStorm(false);
+                }
                 if (isPlayerInWater(player)){
                     return;
                 }
@@ -183,21 +187,27 @@ public class SeasonEffects {
     public static void cancelTasks(){
         if (winterTask != null) {
             winterTask.cancel();
+            winterTask = null;
         }
         if (springTask != null) {
             springTask.cancel();
+            springTask = null;
         }
         if (summerTask != null) {
             summerTask.cancel();
+            summerTask = null;
         }
         if (autumnTask != null){
             autumnTask.cancel();
+            autumnTask = null;
         }
         if (randomParticleTask != null){
             randomParticleTask.cancel();
+            randomParticleTask = null;
         }
         if (randomAutumnParticleTask != null){
             randomAutumnParticleTask.cancel();
+            randomAutumnParticleTask = null;
         }
     }
 }

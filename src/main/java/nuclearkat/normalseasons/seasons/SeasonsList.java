@@ -23,18 +23,25 @@ public class SeasonsList {
             this.name = name;
             this.particleEffect = particleEffect;
             this.biomeTemperatureMap = new HashMap<>();
-            initializeBiomeTemperatures();
+        }
+
+        static {
+            for (Seasons season : Seasons.values()) {
+                season.initializeBiomeTemperatures();
+            }
         }
 
         private void initializeBiomeTemperatures() {
             switch (this) {
                 case SPRING:
-                    biomeTemperatureMap.put(Biome.PLAINS, new double[]{15, 25});
-                    biomeTemperatureMap.put(Biome.FOREST, new double[]{12, 20});
+                    biomeTemperatureMap.put(Biome.PLAINS, new double[]{15, 22});
+                    biomeTemperatureMap.put(Biome.FOREST, new double[]{12, 19});
+                    biomeTemperatureMap.put(Biome.DESERT, new double[]{22, 31});
                     break;
                 case SUMMER:
                     biomeTemperatureMap.put(Biome.PLAINS, new double[]{25, 35});
                     biomeTemperatureMap.put(Biome.FOREST, new double[]{22, 30});
+                    biomeTemperatureMap.put(Biome.DESERT, new double[] {30, 45});
                     break;
                 case AUTUMN:
                     biomeTemperatureMap.put(Biome.PLAINS, new double[]{10, 20});

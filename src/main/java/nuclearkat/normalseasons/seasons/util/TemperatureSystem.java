@@ -1,40 +1,24 @@
 package nuclearkat.normalseasons.seasons.util;
 
+import nuclearkat.normalseasons.NormalSeasons;
 import nuclearkat.normalseasons.seasons.SeasonsList;
-import org.bukkit.*;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
+import java.util.HashMap;
 import java.util.Map;
-
-import static nuclearkat.normalseasons.seasons.util.TemperatureEffects.applyFireDamage;
-import static nuclearkat.normalseasons.seasons.util.TemperatureEffects.applyFreezingEffect;
+import java.util.logging.Level;
 
 public class TemperatureSystem {
 
-    private static final double FREEZING_THRESHOLD = -25;
-    private static final double COLD_THRESHOLD = -1;
-    private static final double SWEAT_THRESHOLD = 32;
-    private static final double FIRE_DAMAGE_THRESHOLD = 42;
+    private static final NormalSeasons seasons = NormalSeasons.getPlugin(NormalSeasons.class);
 
-    public static double calculateTemperature(Biome biome, SeasonsList.Seasons season, Player player) {
-
-        double baseTemperature = getBiomeTemperature(biome, season);
-        double temperature = baseTemperature + calculateHeatSourceEffect(player);
-
-        if (temperature < FREEZING_THRESHOLD) {
-            applyFreezingEffect(player);
-        }
-
-        if (temperature > FIRE_DAMAGE_THRESHOLD) {
-            applyFireDamage(player);
-        }
-
-        return temperature;
-    }
-
-    private static double getBiomeTemperature(Biome biome, SeasonsList.Seasons season) {
+    public static double getBiomeTemperature(Biome biome, SeasonsList.Seasons season) {
         Map<Biome, double[]> biomeTemperatureMap = season.getBiomeTemperatureMap();
         double[] temperatureRange = biomeTemperatureMap.get(biome);
 
@@ -45,7 +29,25 @@ public class TemperatureSystem {
         }
     }
 
-    private static double calculateHeatSourceEffect(Player player) {
+    private static final Map<Material, Double> heatSources = new HashMap<>();
+
+    public static void loadHeatSources() {
+        ConfigurationSection heatSourcesSection = seasons.getConfig().getConfigurationSection("season.heat_sources");
+
+        if (heatSourcesSection != null) {
+            for (String key : heatSourcesSection.getKeys(false)) {
+                double heatValue = heatSourcesSection.getDouble(key);
+                Material material = Material.matchMaterial(key);
+                if (material != null) {
+                    heatSources.put(material, heatValue);
+                } else {
+                    seasons.getLogger().log(Level.WARNING, "Invalid material found in heat sources: " + key);
+                }
+            }
+        }
+    }
+
+    public static double calculateHeatSourceEffect(Player player) {
         World world = player.getWorld();
         double heatEffect = 0.0;
         int searchRadius = 6;
@@ -56,41 +58,23 @@ public class TemperatureSystem {
                     Location currentLocation = player.getLocation().add(x, y, z);
                     Block block = world.getBlockAt(currentLocation);
                     Material material = block.getType();
-
-                    if (material == Material.FIRE) {
-                        double distance = player.getLocation().distance(currentLocation);
-                        heatEffect += 1.0 / (distance * distance);
-                    } else if (material == Material.LAVA) {
-                        heatEffect += 0.5;
-                    } else if (material == Material.TORCH) {
-                        heatEffect += 0.25;
-                    }
+                    heatEffect += heatSources.getOrDefault(material, 0D);
                 }
             }
         }
-
         return heatEffect;
     }
 
-
-    private static double[] getTemperatureRange(Biome biome, SeasonsList.Seasons season) {
-        double[] range = season.getBiomeTemperatureMap().get(biome);
-        if (range == null) {
-            System.out.println("Temperature range not defined for biome " + biome + " in season " + season.getName());
-        }
-        return range;
-    }
-
-    private static double getDefaultTemperature(SeasonsList.Seasons season) {
+    public static double getDefaultTemperature(SeasonsList.Seasons season) {
         switch (season) {
             case WINTER:
-                return -10;
+                return -1;
             case SPRING:
-                return 15;
+                return 20;
             case SUMMER:
                 return 30;
             case AUTUMN:
-                return 20;
+                return 10;
             default:
                 return 0;
         }
