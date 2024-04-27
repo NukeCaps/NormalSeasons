@@ -1,0 +1,7 @@
+name: NormalSeasons
+version: '${project.version}'
+main: nuclearkat.normalseasons.NormalSeasons
+api-version: 1.20
+commands:
+  NSeasons:
+
