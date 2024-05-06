@@ -4,7 +4,6 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import nuclearkat.normalseasons.NormalSeasons;
 import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -20,7 +19,7 @@ public class TemperatureEffects {
     private static BukkitTask applyRegenerationEffect;
 
     public static void applyFreezingEffect(Player player) {
-        player.setWalkSpeed(0.2f);
+        player.setWalkSpeed(0.9f);
         applyFreezingEffect = new BukkitRunnable() {
             @Override
             public void run() {
@@ -34,7 +33,7 @@ public class TemperatureEffects {
         applyColdEffect = new BukkitRunnable() {
             @Override
             public void run() {
-                player.spawnParticle(Particle.WHITE_SMOKE, player.getEyeLocation().add(0, -0.2, 0), 1, 0.1, -0.5, 0);
+                player.spawnParticle(Particle.WHITE_SMOKE, player.getLocation().add(0, 1.6, 0), 5, 0, -0.5, 0);
             }
         }.runTaskTimerAsynchronously(seasons, 5, 100);
     }
@@ -51,35 +50,33 @@ public class TemperatureEffects {
         applySweatEffect = new BukkitRunnable() {
             @Override
             public void run() {
-                player.spawnParticle(Particle.WATER_DROP, player.getEyeLocation(), 3, 0.2, 0.2, 0.2);
+                player.spawnParticle(Particle.WATER_DROP, player.getLocation().add(0, 1.6, 0), 3, 0.1, 0.2, 0.1);
             }
         }.runTaskTimerAsynchronously(seasons, 5, 100);
     }
 
     public static void applyFireDamage(Player player) {
-
         applyFireEffect = new BukkitRunnable() {
             @Override
             public void run() {
-                player.playSound(player.getLocation(), Sound.BLOCK_FIRE_AMBIENT, 1.0f, 1.0f);
                 player.setFireTicks(40);
             }
-        }.runTaskAsynchronously(seasons);
+        }.runTask(seasons);
     }
 
     public static void applyRegenerationEffect(Player player) {
         applyRegenerationEffect = new BukkitRunnable() {
             @Override
             public void run() {
-                player.addPotionEffect(PotionEffectType.REGENERATION.createEffect(1, 6));
+                player.addPotionEffect(PotionEffectType.REGENERATION.createEffect(40, 1));
                 player.spawnParticle(Particle.HEART, player.getLocation(), 1, 0.2, 0.2, 0.2);
             }
-        }.runTaskTimer(seasons, 5, 100);
+        }.runTaskAsynchronously(seasons);
     }
 
     public static void cancelTaskEffects(Player player) {
+        player.setWalkSpeed(1.0f);
         if (applyFreezingEffect != null) {
-            player.setWalkSpeed(1.0f);
             applyFreezingEffect.cancel();
         }
         if (applyColdEffect != null) {

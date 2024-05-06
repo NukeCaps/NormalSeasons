@@ -3,7 +3,6 @@ package nuclearkat.normalseasons.seasons.util;
 import nuclearkat.normalseasons.NormalSeasons;
 import nuclearkat.normalseasons.seasons.SeasonsList;
 import nuclearkat.normalseasons.seasons.SeasonsManager;
-import nuclearkat.normalseasons.seasons.TemperatureManager;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -17,20 +16,18 @@ public class SeasonEffects {
 
     private static BukkitTask winterTask;
     private static BukkitTask springTask;
-    private static BukkitTask summerTask;
     private static BukkitTask autumnTask;
     private static BukkitTask randomParticleTask;
     private static BukkitTask randomAutumnParticleTask;
     private static final Random random = new Random();
-    private static final double RADIUS = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getDouble("season.util.radius");
-    private static final double AUTUMN_RADIUS = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getDouble("season.util.autumn_radius");
-    private static final int VECTOR_Y_OFFSET = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.util.vector_y_offset");
+    private static final NormalSeasons seasons = NormalSeasons.getPlugin(NormalSeasons.class);
+    private static final double RADIUS = seasons.getConfig().getDouble("season.util.radius");
+    private static final double AUTUMN_RADIUS = seasons.getConfig().getDouble("season.util.autumn_radius");
+    private static final int VECTOR_Y_OFFSET = seasons.getConfig().getInt("season.util.vector_y_offset");
     private static final int PARTICLE_SPAWNS_COUNT = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.util.particle_spawns_count");
     private static final int WINTER_PARTICLES_TO_SPAWN = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.winter.particles_to_spawn");
     private static final int SPRING_PARTICLES_TO_SPAWN = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.spring.particles_to_spawn");
     private static final int AUTUMN_PARTICLES_TO_SPAWN = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.autumn.particles_to_spawn");
-    private static final int SUMMER_PARTICLES_TO_SPAWN = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.summer.particles_to_spawn");
-    private static final double summerParticleSpawnChance = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getDouble("season.summer.summer_chance");
 
     private static Vector randomOffset() {
         double x = random.nextDouble() * RADIUS * 2 - RADIUS;
@@ -82,10 +79,7 @@ public class SeasonEffects {
         if (SeasonsManager.getInstance().getPlayerToggleVisuals().contains(player)) {
             return;
         }
-        World world = player.getWorld();
-        if (world.hasStorm()){
-            world.setStorm(false);
-        }
+        setWorldStormFalse(player);
         for (int i = 0; i < 16; i++) {
             randomAutumnParticleTask = new BukkitRunnable(){
                 @Override
@@ -102,6 +96,16 @@ public class SeasonEffects {
         return feetBlock.getType() == Material.WATER;
     }
 
+    private static void setWorldStormFalse(Player player){
+        new BukkitRunnable() {
+            @Override
+            public void run(){
+                player.getWorld().setStorm(false);
+            }
+
+        }.runTask(seasons);
+    }
+
     public static void applyWinterEffects(Player player) {
         if (SeasonsManager.getInstance().getPlayerToggleVisuals().contains(player)) {
             return;
@@ -109,6 +113,9 @@ public class SeasonEffects {
         winterTask = new BukkitRunnable() {
             @Override
             public void run() {
+                if (player.getWorld().hasStorm()){
+                    setWorldStormFalse(player);
+                }
                 if (isPlayerInWater(player)){
                     return;
                 }
@@ -125,29 +132,12 @@ public class SeasonEffects {
             @Override
             public void run() {
                 if (player.getWorld().hasStorm()){
-                    player.getWorld().setStorm(false);
+                    setWorldStormFalse(player);
                 }
                 if (isPlayerInWater(player)){
                     return;
                 }
                 spawnRandomizedParticles(player, SeasonsList.Seasons.SPRING.getParticleEffect());
-            }
-        }.runTaskTimerAsynchronously(NormalSeasons.getPlugin(NormalSeasons.class), 0, 10);
-    }
-
-    public static void applySummerEffects(Player player) {
-        if (SeasonsManager.getInstance().getPlayerToggleVisuals().contains(player)) {
-            return;
-        }
-        summerTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (isPlayerInWater(player)){
-                    return;
-                }
-                if (Math.random() < summerParticleSpawnChance) {
-                    player.spawnParticle(SeasonsList.Seasons.SUMMER.getParticleEffect(), player.getLocation(), SUMMER_PARTICLES_TO_SPAWN, 1, 1, 1);
-                }
             }
         }.runTaskTimerAsynchronously(NormalSeasons.getPlugin(NormalSeasons.class), 0, 10);
     }
@@ -192,10 +182,6 @@ public class SeasonEffects {
         if (springTask != null) {
             springTask.cancel();
             springTask = null;
-        }
-        if (summerTask != null) {
-            summerTask.cancel();
-            summerTask = null;
         }
         if (autumnTask != null){
             autumnTask.cancel();

@@ -6,23 +6,22 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 
 public class SeasonsManager {
 
-    private final NormalSeasons seasonsInstance = NormalSeasons.getPlugin(NormalSeasons.class);
+    private final NormalSeasons seasons = NormalSeasons.getPlugin(NormalSeasons.class);
     private SeasonsList.Seasons currentSeason;
     private final int seasonDurationTicks;
-
     private static SeasonsManager instance;
+    private BukkitTask scheduleSeasonChangeTask;
 
     private SeasonsManager(){
         this.seasonDurationTicks = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.season_duration_ticks");
         currentSeason = SeasonsList.Seasons.SPRING;
-        scheduleSeasonChange();
     }
 
     public static SeasonsManager getInstance(){
@@ -33,13 +32,13 @@ public class SeasonsManager {
     }
 
     public void scheduleSeasonChange(){
-        new BukkitRunnable(){
+        scheduleSeasonChangeTask =  new BukkitRunnable(){
             @Override
             public void run(){
                 SeasonEffects.cancelTasks();
                 rotateSeason();
             }
-        }.runTaskLaterAsynchronously(seasonsInstance, seasonDurationTicks);
+        }.runTaskLaterAsynchronously(seasons, seasonDurationTicks);
 
     }
 
@@ -50,14 +49,14 @@ public class SeasonsManager {
         scheduleSeasonChange();
     }
 
-    private final List<Player> playerToggleVisuals = new ArrayList<>();
+    private final ArrayList<Player> playerToggleVisuals = new ArrayList<>();
 
-    public List<Player> getPlayerToggleVisuals(){
+    public ArrayList<Player> getPlayerToggleVisuals(){
         return playerToggleVisuals;
     }
 
     private void applySeasonEffects() {
-        String seasonChangeMessage = seasonsInstance.getConfig().getString("season.season_change_message");
+        String seasonChangeMessage = seasons.getConfig().getString("season.season_change_message");
 
         if (seasonChangeMessage != null) {
             seasonChangeMessage = seasonChangeMessage.replace("%SeasonName%", getCurrentSeason().getName());
@@ -69,11 +68,11 @@ public class SeasonsManager {
                         case WINTER:
                             SeasonEffects.applyWinterEffects(player);
                             break;
-                        case SUMMER:
-                            SeasonEffects.applySummerEffects(player);
-                            break;
                         case SPRING:
                             SeasonEffects.applySpringEffects(player);
+                            break;
+                        case SUMMER:
+                            SeasonEffects.cancelTasks();
                             break;
                         case AUTUMN:
                             SeasonEffects.applyAutumnEffects(player);
@@ -83,6 +82,13 @@ public class SeasonsManager {
             });
         } else {
             Bukkit.getLogger().log(Level.WARNING, "Season change message is null. Make sure the configuration value is set correctly.");
+        }
+    }
+
+    public void cancelTasks(){
+        if (scheduleSeasonChangeTask != null){
+            scheduleSeasonChangeTask.cancel();
+            scheduleSeasonChangeTask = null;
         }
     }
 
