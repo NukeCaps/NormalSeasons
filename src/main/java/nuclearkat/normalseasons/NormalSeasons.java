@@ -3,9 +3,9 @@ package nuclearkat.normalseasons;
 import nuclearkat.normalseasons.seasons.SeasonsManager;
 import nuclearkat.normalseasons.seasons.commands.NormalSeasonCommand;
 import nuclearkat.normalseasons.seasons.events.TemperatureEventListener;
-import nuclearkat.normalseasons.seasons.util.SeasonEffects;
-import nuclearkat.normalseasons.seasons.util.TemperatureEffects;
-import nuclearkat.normalseasons.seasons.util.TemperatureSystem;
+import nuclearkat.normalseasons.seasons.SeasonEffects;
+import nuclearkat.normalseasons.seasons.temperature.TemperatureEffects;
+import nuclearkat.normalseasons.seasons.temperature.TemperatureSystem;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -20,7 +20,7 @@ public final class NormalSeasons extends JavaPlugin {
     }
 
     private void registerCommands(){
-        getCommand("NSeasons").setExecutor(new NormalSeasonCommand());
+        getCommand("NSeasons").setExecutor(new NormalSeasonCommand(seasonsManager, seasonEffects));
     }
 
     private void registerListeners(){
@@ -40,15 +40,24 @@ public final class NormalSeasons extends JavaPlugin {
     private void addDefaultConfigValues(){
         getConfig().addDefault("season.season_change_message", "The season has just changed to&a %SeasonName% &f!");
         getConfig().addDefault("season.current_season_message", "The current season is&a %SeasonName% &f!");
-        getConfig().addDefault("season.seasons_list_message", "There are currently 4 seasons: &a%Seasons%");
+        getConfig().addDefault("season.seasons_list_message", "There are 4 seasons: &a%Seasons%");
         getConfig().addDefault("season.season_duration_ticks", 1200);
 
         getConfig().addDefault("season.winter.particles_to_spawn", 96);
+        getConfig().addDefault("season.winter.default_temperature", -1);
+
         getConfig().addDefault("season.spring.particles_to_spawn", 32);
+        getConfig().addDefault("season.spring.default_temperature", 20);
+
         getConfig().addDefault("season.autumn.particles_to_spawn", 10);
+        getConfig().addDefault("season.autumn.default_temperature", 10);
+        getConfig().addDefault("season.autumn.tree_search_length", 8);
+
+        getConfig().addDefault("season.summer.default_temperature", 30);
 
         getConfig().addDefault("season.util.radius", 32.0);
         getConfig().addDefault("season.util.autumn_radius", 3);
+        getConfig().addDefault("season.util.heat_detection_radius", 6);
         getConfig().addDefault("season.util.vector_y_offset", 18);
         getConfig().addDefault("season.util.particle_spawns_count", 32);
         getConfig().addDefault("season.util.freeze_threshold", -25);
@@ -67,22 +76,26 @@ public final class NormalSeasons extends JavaPlugin {
         TemperatureSystem.loadHeatSources();
     }
 
-    private final TemperatureEventListener temperatureEventListener = new TemperatureEventListener(this);
+    private final SeasonEffects seasonEffects = new SeasonEffects(this);
+    private final SeasonsManager seasonsManager = SeasonsManager.getInstance(seasonEffects, this);
+    private final TemperatureEffects temperatureEffects = new TemperatureEffects(this);
+    private final TemperatureEventListener temperatureEventListener = new TemperatureEventListener(this, temperatureEffects, seasonsManager);
 
     private void startMainTasks(){
-        SeasonsManager.getInstance().scheduleSeasonChange();
+        seasonsManager.scheduleSeasonChange();
         temperatureEventListener.startTemperatureUpdateTask();
     }
 
     private void cancelTasks(){
-        SeasonEffects.cancelTasks();
-        TemperatureEffects.cancelTasks();
+        seasonEffects.cancelAndRemoveTasks();
+        temperatureEffects.removeTasks();
         temperatureEventListener.cancelTask();
-        SeasonsManager.getInstance().cancelTasks();
+        seasonsManager.cancelTasks();
     }
 
     @Override
     public void onDisable() {
         cancelTasks();
+        Bukkit.getScheduler().cancelTasks(this);
     }
 }

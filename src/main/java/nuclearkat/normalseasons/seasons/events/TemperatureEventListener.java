@@ -3,10 +3,10 @@ package nuclearkat.normalseasons.seasons.events;
 import nuclearkat.normalseasons.NormalSeasons;
 import nuclearkat.normalseasons.seasons.SeasonsList;
 import nuclearkat.normalseasons.seasons.SeasonsManager;
-import nuclearkat.normalseasons.seasons.util.TemperatureSystem;
+import nuclearkat.normalseasons.seasons.temperature.TemperatureEffects;
+import nuclearkat.normalseasons.seasons.temperature.TemperatureSystem;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -18,73 +18,57 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static nuclearkat.normalseasons.seasons.util.TemperatureEffects.*;
-import static nuclearkat.normalseasons.seasons.util.TemperatureSystem.calculateHeatSourceEffect;
-import static nuclearkat.normalseasons.seasons.util.TemperatureSystem.getBiomeTemperature;
-
 public class TemperatureEventListener implements Listener {
     private final ConcurrentHashMap<UUID, Double> temperatureCache = new ConcurrentHashMap<>();
     private BukkitTask temperatureUpdateTask;
     private final NormalSeasons seasons;
+    private final TemperatureEffects temperatureEffects;
+    private final SeasonsManager seasonsManager;
 
-    public TemperatureEventListener(NormalSeasons seasons){
+    public TemperatureEventListener(NormalSeasons seasons, TemperatureEffects temperatureEffects, SeasonsManager seasonsManager){
         this.seasons = seasons;
+        this.temperatureEffects = temperatureEffects;
+        this.seasonsManager = seasonsManager;
     }
 
     @EventHandler
     public void onTemperatureChange(PlayerTemperatureChangeEvent event){
         Player player = event.getPlayer();
-        double temperature = event.getTemperature();
-        double freezingThreshold = seasons.getConfig().getDouble("season.util.freeze_threshold");
-        double coldThreshold = seasons.getConfig().getDouble("season.util.cold_threshold");
-        double sweatThreshold = seasons.getConfig().getDouble("season.util.sweat_threshold");
-        double fireThreshold = seasons.getConfig().getDouble("season.util.fire_threshold");
+        double newTemperature = event.getTemperature();
+        updatePlayerTemperature(player, newTemperature);
+    }
 
-        cancelTaskEffects(player);
+    private void updatePlayerTemperature(Player player, double newTemperature){
+        temperatureEffects.cancelTaskEffects();
+        player.setWalkSpeed(1.0f);
 
-        if (temperature < freezingThreshold) {
-            applyFreezingEffect(player);
-            return;
+        if (newTemperature < seasons.getConfig().getDouble("season.util.freeze_threshold")) {
+            temperatureEffects.applyFreezingEffect(player);
+            player.setWalkSpeed(0.9f);
+        } else if (newTemperature < seasons.getConfig().getDouble("season.util.cold_threshold")) {
+            temperatureEffects.applyColdEffect(player);
+        } else if (newTemperature > seasons.getConfig().getDouble("season.util.sweat_threshold")) {
+            temperatureEffects.applySweatEffect(player);
+        } else if (newTemperature > seasons.getConfig().getDouble("season.util.fire_threshold")) {
+            temperatureEffects.applyFireDamage(player);
+        } else if (newTemperature > 25 && newTemperature < 32) {
+            temperatureEffects.applyRegenerationEffect(player);
         }
 
-        if (temperature < coldThreshold){
-            applyColdEffect(player);
-            return;
-        }
-
-        if (temperature > sweatThreshold){
-            applySweatEffect(player);
-            return;
-        }
-
-        if (temperature > fireThreshold) {
-            applyFireDamage(player);
-            return;
-        }
-
-        if (temperature > 25 && temperature < 32){
-            applyRegenerationEffect(player);
-            return;
-        }
-        if (temperature > -1 && temperature < 26){
-            cancelTaskEffects(player);
-        }
     }
 
     public void startTemperatureUpdateTask(){
-
         temperatureUpdateTask = new BukkitRunnable() {
             @Override
             public void run(){
                 for (Player player : Bukkit.getOnlinePlayers()){
-
                     if (temperatureCache.get(player.getUniqueId()) == null){
-                        temperatureCache.put(player.getUniqueId(), TemperatureSystem.getDefaultTemperature(SeasonsManager.getInstance().getCurrentSeason()));
+                        temperatureCache.put(player.getUniqueId(), TemperatureSystem.getDefaultTemperature(seasonsManager.getCurrentSeason()));
                     }
-                    emitTemperatureChange(player, temperatureCache.getOrDefault(player.getUniqueId(), 0.0), calculatePlayerTemperature(player.getWorld().getBiome(player.getLocation()), SeasonsManager.getInstance().getCurrentSeason(), player));
+                    emitTemperatureChange(player, temperatureCache.getOrDefault(player.getUniqueId(), 0.0), calculatePlayerTemperature(player.getWorld().getBiome(player.getLocation()), seasonsManager.getCurrentSeason(), player));
                 }
             }
-        }.runTaskTimer(seasons, 5, 15);
+        }.runTaskTimer(seasons, 5, 100);
     }
 
     public void emitTemperatureChange(Player player, double oldTemp, double newTemp) {
@@ -102,7 +86,7 @@ public class TemperatureEventListener implements Listener {
                         currentTemp = newTemp;
                     }
                 }
-                displayTemperature(player, currentTemp);
+                temperatureEffects.displayTemperature(player, currentTemp);
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -114,54 +98,24 @@ public class TemperatureEventListener implements Listener {
     }
 
     private double calculatePlayerTemperature(Biome biome, SeasonsList.Seasons season, Player player) {
-
-        double baseTemperature = getBiomeTemperature(biome, season);
-        double temperature = baseTemperature + calculateHeatSourceEffect(player);
-        World world = player.getWorld();
-        boolean isStorming = world.hasStorm();
+        double baseTemperature = TemperatureSystem.getBiomeTemperature(biome, season);
+        double temperature = baseTemperature + TemperatureSystem.calculateHeatSourceEffect(player);
+        boolean isStorming = player.getWorld().hasStorm();
         boolean isPlayerInWater = isPlayerInWater(player);
 
-        if (!isStorming && !isPlayerInWater) {
-            temperature += 0;
-        } else {
-            if (isStorming) {
-                switch (season) {
-                    case SPRING:
-                        temperature -= 5;
-                        break;
-                    case SUMMER:
-                        temperature -= 4;
-                        break;
-                    case AUTUMN:
-                        temperature -= 6;
-                        break;
-                    case WINTER:
-                        temperature -= 8;
-                        break;
-                }
-            }
-
-            if (isPlayerInWater) {
-                switch (season) {
-                    case SPRING:
-                        temperature -= 6;
-                        break;
-                    case SUMMER:
-                        temperature -= 5;
-                        break;
-                    case AUTUMN:
-                        temperature -= 7;
-                        break;
-                    case WINTER:
-                        temperature -= 9;
-                        break;
-                }
-            }
+        if (isStorming) {
+            temperature -= switch (season) {
+                case SPRING -> isPlayerInWater ? 6 : 5;
+                case SUMMER -> isPlayerInWater ? 5 : 4;
+                case AUTUMN -> isPlayerInWater ? 7 : 6;
+                case WINTER -> isPlayerInWater ? 9 : 8;
+            };
         }
+
         return temperature;
     }
 
-    private static boolean isPlayerInWater(Player player){
+    private boolean isPlayerInWater(Player player){
         Block feetBlock = player.getLocation().getBlock();
         return feetBlock.getType() == Material.WATER;
     }

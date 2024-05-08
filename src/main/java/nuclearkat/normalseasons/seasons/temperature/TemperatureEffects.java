@@ -1,4 +1,4 @@
-package nuclearkat.normalseasons.seasons.util;
+package nuclearkat.normalseasons.seasons.temperature;
 
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -11,15 +11,26 @@ import org.bukkit.scheduler.BukkitTask;
 
 public class TemperatureEffects {
 
-    private static final NormalSeasons seasons = NormalSeasons.getPlugin(NormalSeasons.class);
-    private static BukkitTask applyFreezingEffect;
-    private static BukkitTask applyColdEffect;
-    private static BukkitTask applyFireEffect;
-    private static BukkitTask applySweatEffect;
-    private static BukkitTask applyRegenerationEffect;
+    public TemperatureEffects(NormalSeasons seasons){
+        this.seasons = seasons;
+    }
 
-    public static void applyFreezingEffect(Player player) {
-        player.setWalkSpeed(0.9f);
+    private final NormalSeasons seasons;
+    private BukkitTask applyFreezingEffect;
+    private BukkitTask applyColdEffect;
+    private BukkitTask applyFireEffect;
+    private BukkitTask applySweatEffect;
+    private BukkitTask applyRegenerationEffect;
+
+    public void displayTemperature(Player player, double temperature) {
+        String temperatureString = String.format("%.1f°C", temperature);
+
+        TextComponent temperatureComponent = new TextComponent("§7§lTemperature " + "§9" + temperatureString);
+
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, temperatureComponent);
+    }
+
+    public void applyFreezingEffect(Player player) {
         applyFreezingEffect = new BukkitRunnable() {
             @Override
             public void run() {
@@ -28,7 +39,7 @@ public class TemperatureEffects {
         }.runTaskAsynchronously(seasons);
     }
 
-    public static void applyColdEffect(Player player) {
+    public void applyColdEffect(Player player) {
 
         applyColdEffect = new BukkitRunnable() {
             @Override
@@ -38,15 +49,17 @@ public class TemperatureEffects {
         }.runTaskTimerAsynchronously(seasons, 5, 100);
     }
 
-    public static void displayTemperature(Player player, double temperature) {
-        String temperatureString = String.format("%.1f°C", temperature);
-
-        TextComponent temperatureComponent = new TextComponent("§7§lTemperature " + "§9" + temperatureString);
-
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, temperatureComponent);
+    public void applyRegenerationEffect(Player player) {
+        applyRegenerationEffect = new BukkitRunnable() {
+            @Override
+            public void run() {
+                player.addPotionEffect(PotionEffectType.REGENERATION.createEffect(40, 1));
+                player.spawnParticle(Particle.HEART, player.getLocation(), 1, 0.2, 0.2, 0.2);
+            }
+        }.runTask(seasons);
     }
 
-    public static void applySweatEffect(Player player) {
+    public void applySweatEffect(Player player) {
         applySweatEffect = new BukkitRunnable() {
             @Override
             public void run() {
@@ -55,7 +68,7 @@ public class TemperatureEffects {
         }.runTaskTimerAsynchronously(seasons, 5, 100);
     }
 
-    public static void applyFireDamage(Player player) {
+    public void applyFireDamage(Player player) {
         applyFireEffect = new BukkitRunnable() {
             @Override
             public void run() {
@@ -64,18 +77,7 @@ public class TemperatureEffects {
         }.runTask(seasons);
     }
 
-    public static void applyRegenerationEffect(Player player) {
-        applyRegenerationEffect = new BukkitRunnable() {
-            @Override
-            public void run() {
-                player.addPotionEffect(PotionEffectType.REGENERATION.createEffect(40, 1));
-                player.spawnParticle(Particle.HEART, player.getLocation(), 1, 0.2, 0.2, 0.2);
-            }
-        }.runTaskAsynchronously(seasons);
-    }
-
-    public static void cancelTaskEffects(Player player) {
-        player.setWalkSpeed(1.0f);
+    public void cancelTaskEffects() {
         if (applyFreezingEffect != null) {
             applyFreezingEffect.cancel();
         }
@@ -92,7 +94,7 @@ public class TemperatureEffects {
             applyRegenerationEffect.cancel();
         }
     }
-    public static void cancelTasks(){
+    public void removeTasks(){
         applyFreezingEffect = null;
         applyColdEffect = null;
         applySweatEffect = null;

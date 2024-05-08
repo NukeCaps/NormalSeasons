@@ -1,58 +1,54 @@
 package nuclearkat.normalseasons.seasons;
 
 import nuclearkat.normalseasons.NormalSeasons;
-import nuclearkat.normalseasons.seasons.util.SeasonEffects;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.ArrayList;
 import java.util.logging.Level;
 
 public class SeasonsManager {
 
-    private final NormalSeasons seasons = NormalSeasons.getPlugin(NormalSeasons.class);
+    private final NormalSeasons seasons;
     private SeasonsList.Seasons currentSeason;
     private final int seasonDurationTicks;
-    private static SeasonsManager instance;
     private BukkitTask scheduleSeasonChangeTask;
+    private final SeasonEffects seasonEffects;
 
-    private SeasonsManager(){
-        this.seasonDurationTicks = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.season_duration_ticks");
-        currentSeason = SeasonsList.Seasons.SPRING;
-    }
+    private static SeasonsManager instance;
 
-    public static SeasonsManager getInstance(){
+    public static SeasonsManager getInstance(SeasonEffects seasonEffects, NormalSeasons seasons){
         if (instance == null){
-            instance = new SeasonsManager();
+            instance = new SeasonsManager(seasonEffects, seasons);
         }
         return instance;
+    }
+
+    private SeasonsManager(SeasonEffects seasonEffects, NormalSeasons seasons){
+        this.seasons = seasons;
+        this.seasonDurationTicks = seasons.getConfig().getInt("season.season_duration_ticks");
+        currentSeason = SeasonsList.Seasons.SPRING;
+        this.seasonEffects = seasonEffects;
     }
 
     public void scheduleSeasonChange(){
         scheduleSeasonChangeTask =  new BukkitRunnable(){
             @Override
             public void run(){
-                SeasonEffects.cancelTasks();
+                seasonEffects.cancelAndRemoveTasks();
                 rotateSeason();
             }
         }.runTaskLaterAsynchronously(seasons, seasonDurationTicks);
-
     }
 
     private void rotateSeason(){
         int nextOrdinal = (currentSeason.ordinal() + 1) % SeasonsList.Seasons.values().length;
         currentSeason = SeasonsList.Seasons.values()[nextOrdinal];
         applySeasonEffects();
-        scheduleSeasonChange();
-    }
-
-    private final ArrayList<Player> playerToggleVisuals = new ArrayList<>();
-
-    public ArrayList<Player> getPlayerToggleVisuals(){
-        return playerToggleVisuals;
+        if (scheduleSeasonChangeTask == null || scheduleSeasonChangeTask.isCancelled()) {
+            scheduleSeasonChange();
+        }
     }
 
     private void applySeasonEffects() {
@@ -66,16 +62,16 @@ public class SeasonsManager {
                 world.getPlayers().forEach(player -> {
                     switch (currentSeason) {
                         case WINTER:
-                            SeasonEffects.applyWinterEffects(player);
+                            seasonEffects.applyWinterEffects(player);
                             break;
                         case SPRING:
-                            SeasonEffects.applySpringEffects(player);
+                            seasonEffects.applySpringEffects(player);
                             break;
                         case SUMMER:
-                            SeasonEffects.cancelTasks();
+                            seasonEffects.cancelAndRemoveTasks();
                             break;
                         case AUTUMN:
-                            SeasonEffects.applyAutumnEffects(player);
+                            seasonEffects.applyAutumnEffects(player);
                             break;
                     }
                 });
@@ -95,5 +91,4 @@ public class SeasonsManager {
     public SeasonsList.Seasons getCurrentSeason(){
         return currentSeason;
     }
-
 }

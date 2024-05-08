@@ -1,73 +1,81 @@
-package nuclearkat.normalseasons.seasons.util;
+package nuclearkat.normalseasons.seasons;
 
 import nuclearkat.normalseasons.NormalSeasons;
-import nuclearkat.normalseasons.seasons.SeasonsList;
-import nuclearkat.normalseasons.seasons.SeasonsManager;
-import org.bukkit.*;
+import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public class SeasonEffects {
 
-    private static BukkitTask winterTask;
-    private static BukkitTask springTask;
-    private static BukkitTask autumnTask;
-    private static BukkitTask randomParticleTask;
-    private static BukkitTask randomAutumnParticleTask;
-    private static final Random random = new Random();
-    private static final NormalSeasons seasons = NormalSeasons.getPlugin(NormalSeasons.class);
-    private static final double RADIUS = seasons.getConfig().getDouble("season.util.radius");
-    private static final double AUTUMN_RADIUS = seasons.getConfig().getDouble("season.util.autumn_radius");
-    private static final int VECTOR_Y_OFFSET = seasons.getConfig().getInt("season.util.vector_y_offset");
-    private static final int PARTICLE_SPAWNS_COUNT = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.util.particle_spawns_count");
-    private static final int WINTER_PARTICLES_TO_SPAWN = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.winter.particles_to_spawn");
-    private static final int SPRING_PARTICLES_TO_SPAWN = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.spring.particles_to_spawn");
-    private static final int AUTUMN_PARTICLES_TO_SPAWN = NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getInt("season.autumn.particles_to_spawn");
+    private final NormalSeasons seasons;
+    private BukkitTask winterTask;
+    private BukkitTask springTask;
+    private BukkitTask autumnTask;
+    private BukkitTask randomParticleTask;
+    private BukkitTask randomAutumnParticleTask;
+    private final Random random = new Random();
+    private final double RADIUS;
+    private final double AUTUMN_RADIUS;
+    private final int VECTOR_Y_OFFSET;
+    private final int PARTICLE_SPAWNS_COUNT;
+    private final int WINTER_PARTICLES_TO_SPAWN;
+    private final int SPRING_PARTICLES_TO_SPAWN;
+    private final int AUTUMN_PARTICLES_TO_SPAWN;
 
-    private static Vector randomOffset() {
+        public SeasonEffects(NormalSeasons seasons){
+            this.seasons = seasons;
+            this.RADIUS = seasons.getConfig().getDouble("season.util.radius");
+            this.AUTUMN_RADIUS = seasons.getConfig().getDouble("season.util.autumn_radius");
+            this.VECTOR_Y_OFFSET = seasons.getConfig().getInt("season.util.vector_y_offset");
+            this.PARTICLE_SPAWNS_COUNT = seasons.getConfig().getInt("season.util.particle_spawns_count");
+            this.WINTER_PARTICLES_TO_SPAWN = seasons.getConfig().getInt("season.winter.particles_to_spawn");
+            this.SPRING_PARTICLES_TO_SPAWN = seasons.getConfig().getInt("season.spring.particles_to_spawn");
+            this.AUTUMN_PARTICLES_TO_SPAWN = seasons.getConfig().getInt("season.autumn.particles_to_spawn");
+        }
+
+    private Vector randomOffset() {
         double x = random.nextDouble() * RADIUS * 2 - RADIUS;
         double z = random.nextDouble() * RADIUS * 2 - RADIUS;
         return new Vector(x, VECTOR_Y_OFFSET, z);
     }
 
-    private static Vector randomAutumnOffset(){
+    private Vector randomAutumnOffset(){
         double x = random.nextDouble() * AUTUMN_RADIUS * 2 - AUTUMN_RADIUS;
         double z = random.nextDouble() * AUTUMN_RADIUS * 2 - AUTUMN_RADIUS;
         return new Vector(x, 3, z);
     }
 
-    private static void spawnRandomizedParticles(Player player, Particle particleEffect) {
+    private final ArrayList<Player> playerToggleVisuals = new ArrayList<>();
+
+    public ArrayList<Player> getPlayerToggleVisuals(){
+        return playerToggleVisuals;
+    }
+
+    private void spawnRandomizedParticles(Player player, Particle particleEffect) {
         for (int i = 0; i < PARTICLE_SPAWNS_COUNT; i++) {
             randomParticleTask = new BukkitRunnable() {
                 @Override
                 public void run() {
                     Vector offset = randomOffset();
-                    World world = player.getWorld();
-                    if (world.hasStorm()){
-                        world.setStorm(false);
+                    if (player.getWorld().hasStorm()){
+                        setWorldStormFalse(player);
                     }
-                    switch (particleEffect){
+                    switch (particleEffect) {
 
                         case FALLING_DRIPSTONE_WATER:
-
-                            player.spawnParticle(particleEffect, player.getLocation().add(offset), SPRING_PARTICLES_TO_SPAWN, 32, -2, 32);
+                            player.spawnParticle(particleEffect, player.getLocation().add(offset), SPRING_PARTICLES_TO_SPAWN, 2, -2, 2);
                             break;
 
                         case SNOWBALL:
-                            player.spawnParticle(particleEffect, player.getLocation().add(offset), WINTER_PARTICLES_TO_SPAWN, 32, -4, 32);
-                            break;
-
-                        case CHERRY_LEAVES:
-                            player.spawnParticle(particleEffect, player.getLocation().add(offset), AUTUMN_PARTICLES_TO_SPAWN, 8, -4, 8);
-                            break;
-
-                        default:
-
+                            player.spawnParticle(particleEffect, player.getLocation().add(offset), WINTER_PARTICLES_TO_SPAWN, 2, -4, 2);
                             break;
                     }
                 }
@@ -75,28 +83,28 @@ public class SeasonEffects {
         }
     }
 
-    private static void spawnRandomizedAutumnParticles(Player player, Particle particleEffect) {
-        if (SeasonsManager.getInstance().getPlayerToggleVisuals().contains(player)) {
+    private void spawnRandomizedAutumnParticles(Player player, Particle particleEffect) {
+        if (playerToggleVisuals.contains(player)) {
             return;
         }
         setWorldStormFalse(player);
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < PARTICLE_SPAWNS_COUNT; i++) {
             randomAutumnParticleTask = new BukkitRunnable(){
                 @Override
                 public void run(){
                     Vector autumnOffset = randomAutumnOffset();
-                    player.spawnParticle(particleEffect, player.getLocation().add(autumnOffset), AUTUMN_PARTICLES_TO_SPAWN, 8, -4, 8);
+                    player.spawnParticle(particleEffect, player.getLocation().add(autumnOffset), AUTUMN_PARTICLES_TO_SPAWN, 2, -4.5, 0);
                 }
-            }.runTaskLaterAsynchronously(NormalSeasons.getPlugin(NormalSeasons.class), random.nextInt(11));
+            }.runTaskLaterAsynchronously(NormalSeasons.getPlugin(NormalSeasons.class), random.nextInt(21));
         }
     }
 
-    private static boolean isPlayerInWater(Player player){
+    private boolean isPlayerInWater(Player player){
         Block feetBlock = player.getLocation().getBlock();
         return feetBlock.getType() == Material.WATER;
     }
 
-    private static void setWorldStormFalse(Player player){
+    private void setWorldStormFalse(Player player){
         new BukkitRunnable() {
             @Override
             public void run(){
@@ -106,8 +114,8 @@ public class SeasonEffects {
         }.runTask(seasons);
     }
 
-    public static void applyWinterEffects(Player player) {
-        if (SeasonsManager.getInstance().getPlayerToggleVisuals().contains(player)) {
+    public void applyWinterEffects(Player player) {
+        if (playerToggleVisuals.contains(player)) {
             return;
         }
         winterTask = new BukkitRunnable() {
@@ -124,8 +132,8 @@ public class SeasonEffects {
         }.runTaskTimerAsynchronously(NormalSeasons.getPlugin(NormalSeasons.class), 0, 10);
     }
 
-    public static void applySpringEffects(Player player) {
-        if (SeasonsManager.getInstance().getPlayerToggleVisuals().contains(player)) {
+    public void applySpringEffects(Player player) {
+        if (playerToggleVisuals.contains(player)) {
             return;
         }
         springTask = new BukkitRunnable() {
@@ -142,8 +150,8 @@ public class SeasonEffects {
         }.runTaskTimerAsynchronously(NormalSeasons.getPlugin(NormalSeasons.class), 0, 10);
     }
 
-    public static void applyAutumnEffects(Player player) {
-        if (SeasonsManager.getInstance().getPlayerToggleVisuals().contains(player)) {
+    public void applyAutumnEffects(Player player) {
+        if (playerToggleVisuals.contains(player)) {
             return;
         }
         autumnTask = new BukkitRunnable() {
@@ -152,15 +160,13 @@ public class SeasonEffects {
                 if (isPlayerInWater(player)){
                     return;
                 }
-                World world = player.getWorld();
-                Location playerLocation = player.getLocation();
-                int playerY = playerLocation.getBlockY();
-                int treeCheckLength = 8;
+                int playerY = player.getLocation().getBlockY();
+                int treeCheckLength = seasons.getConfig().getInt("season.autumn.tree_search_length");
 
                 boolean underTree = false;
                 for (int i = 0; i < treeCheckLength; i++) {
                     int checkY = playerY + i;
-                    Block blockAbovePlayer = world.getBlockAt(playerLocation.getBlockX(), checkY, playerLocation.getBlockZ());
+                    Block blockAbovePlayer = player.getWorld().getBlockAt(player.getLocation().getBlockX(), checkY, player.getLocation().getBlockZ());
                     Material blockType = blockAbovePlayer.getType();
                         if (Tag.LEAVES.isTagged(blockType)) {
                             underTree = true;
@@ -174,7 +180,7 @@ public class SeasonEffects {
         }.runTaskTimerAsynchronously(NormalSeasons.getPlugin(NormalSeasons.class), 0, 10);
     }
 
-    public static void cancelTasks(){
+    public void cancelAndRemoveTasks(){
         if (winterTask != null) {
             winterTask.cancel();
             winterTask = null;

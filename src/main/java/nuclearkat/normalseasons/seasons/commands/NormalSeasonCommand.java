@@ -3,6 +3,7 @@ package nuclearkat.normalseasons.seasons.commands;
 import nuclearkat.normalseasons.NormalSeasons;
 import nuclearkat.normalseasons.seasons.SeasonsList;
 import nuclearkat.normalseasons.seasons.SeasonsManager;
+import nuclearkat.normalseasons.seasons.SeasonEffects;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -12,6 +13,15 @@ import org.bukkit.entity.Player;
 import java.util.Arrays;
 
 public class NormalSeasonCommand implements CommandExecutor {
+
+    private final SeasonsManager seasonsManager;
+    private final SeasonEffects seasonEffects;
+
+    public NormalSeasonCommand(SeasonsManager seasonsManager, SeasonEffects seasonEffects){
+        this.seasonsManager = seasonsManager;
+        this.seasonEffects = seasonEffects;
+    }
+
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args) {
 
@@ -30,7 +40,7 @@ public class NormalSeasonCommand implements CommandExecutor {
 
                     case "season":
 
-                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getString("season.current_season_message").replace("%SeasonName%", SeasonsManager.getInstance().getCurrentSeason().getName())));
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getString("season.current_season_message").replace("%SeasonName%", seasonsManager.getCurrentSeason().getName())));
 
                         return true;
 
@@ -40,11 +50,11 @@ public class NormalSeasonCommand implements CommandExecutor {
                         return true;
 
                     case "toggle":
-                        if (SeasonsManager.getInstance().getPlayerToggleVisuals().contains(player)){
-                            SeasonsManager.getInstance().getPlayerToggleVisuals().remove(player);
+                        if (seasonEffects.getPlayerToggleVisuals().contains(player)){
+                            seasonEffects.getPlayerToggleVisuals().remove(player);
                             player.sendMessage(ChatColor.translateAlternateColorCodes('&', "You have just &atoggled seasons visual effects!"));
                         } else {
-                            SeasonsManager.getInstance().getPlayerToggleVisuals().add(player);
+                            seasonEffects.getPlayerToggleVisuals().add(player);
                             player.sendMessage(ChatColor.translateAlternateColorCodes('&', "You have just &ctoggled seasons visual effects!"));
                         }
                         return true;

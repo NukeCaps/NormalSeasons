@@ -4,12 +4,11 @@ import org.bukkit.Particle;
 import org.bukkit.block.Biome;
 
 import java.util.HashMap;
-import java.util.Map;
+
 
 public class SeasonsList {
 
     public enum Seasons {
-
         SPRING("Spring", Particle.FALLING_DRIPSTONE_WATER),
         SUMMER("Summer", Particle.FLAME),
         AUTUMN("Autumn", Particle.CHERRY_LEAVES),
@@ -17,7 +16,7 @@ public class SeasonsList {
 
         private final String name;
         private final Particle particleEffect;
-        private final Map<Biome, double[]> biomeTemperatureMap;
+        private final HashMap<Biome, double[]> biomeTemperatureMap;
 
         Seasons(String name, Particle particleEffect) {
             this.name = name;
@@ -62,7 +61,7 @@ public class SeasonsList {
             return particleEffect;
         }
 
-        public Map<Biome, double[]> getBiomeTemperatureMap() {
+        public HashMap<Biome, double[]> getBiomeTemperatureMap() {
             return biomeTemperatureMap;
         }
     }

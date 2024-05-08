@@ -1,7 +1,8 @@
-package nuclearkat.normalseasons.seasons.util;
+package nuclearkat.normalseasons.seasons.temperature;
 
 import nuclearkat.normalseasons.NormalSeasons;
 import nuclearkat.normalseasons.seasons.SeasonsList;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -11,7 +12,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 
 public class TemperatureSystem {
@@ -19,7 +19,7 @@ public class TemperatureSystem {
     private static final NormalSeasons seasons = NormalSeasons.getPlugin(NormalSeasons.class);
 
     public static double getBiomeTemperature(Biome biome, SeasonsList.Seasons season) {
-        Map<Biome, double[]> biomeTemperatureMap = season.getBiomeTemperatureMap();
+        HashMap<Biome, double[]> biomeTemperatureMap = season.getBiomeTemperatureMap();
         double[] temperatureRange = biomeTemperatureMap.get(biome);
 
         if (temperatureRange != null) {
@@ -29,7 +29,7 @@ public class TemperatureSystem {
         }
     }
 
-    private static final Map<Material, Double> heatSources = new HashMap<>();
+    private static final HashMap<Material, Double> heatSources = new HashMap<>();
 
     public static void loadHeatSources() {
         ConfigurationSection heatSourcesSection = seasons.getConfig().getConfigurationSection("season.heat_sources");
@@ -41,7 +41,7 @@ public class TemperatureSystem {
                 if (material != null) {
                     heatSources.put(material, heatValue);
                 } else {
-                    seasons.getLogger().log(Level.WARNING, "Invalid material found in heat sources: " + key);
+                    Bukkit.getLogger().log(Level.WARNING, "Invalid material found in heat sources: " + key);
                 }
             }
         }
@@ -50,7 +50,7 @@ public class TemperatureSystem {
     public static double calculateHeatSourceEffect(Player player) {
         World world = player.getWorld();
         double heatEffect = 0.0;
-        int searchRadius = 6;
+        int searchRadius = seasons.getConfig().getInt("season.util.heat_detection_radius");
 
         for (int x = -searchRadius; x <= searchRadius; x++) {
             for (int y = -searchRadius; y <= searchRadius; y++) {
@@ -68,13 +68,13 @@ public class TemperatureSystem {
     public static double getDefaultTemperature(SeasonsList.Seasons season) {
         switch (season) {
             case WINTER:
-                return -1;
+                return seasons.getConfig().getDouble("season.winter.default_temperature");
             case SPRING:
-                return 20;
+                return seasons.getConfig().getDouble("season.spring.default_temperature");
             case SUMMER:
-                return 30;
+                return seasons.getConfig().getDouble("season.summer.default_temperature");
             case AUTUMN:
-                return 10;
+                return seasons.getConfig().getDouble("season.autumn.default_temperature");
             default:
                 return 0;
         }
