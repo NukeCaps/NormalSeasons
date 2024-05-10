@@ -1,8 +1,10 @@
 package nuclearkat.normalseasons.seasons;
 
 import nuclearkat.normalseasons.NormalSeasons;
+import nuclearkat.normalseasons.seasons.events.PlayerTemperatureChangeEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -11,7 +13,7 @@ import java.util.logging.Level;
 public class SeasonsManager {
 
     private final NormalSeasons seasons;
-    private SeasonsList.Seasons currentSeason;
+    private SeasonsList currentSeason;
     private final int seasonDurationTicks;
     private BukkitTask scheduleSeasonChangeTask;
     private final SeasonEffects seasonEffects;
@@ -28,7 +30,8 @@ public class SeasonsManager {
     private SeasonsManager(SeasonEffects seasonEffects, NormalSeasons seasons){
         this.seasons = seasons;
         this.seasonDurationTicks = seasons.getConfig().getInt("season.season_duration_ticks");
-        currentSeason = SeasonsList.Seasons.SPRING;
+        SeasonsList.initializeBiomeTemperature();
+        currentSeason = SeasonsList.SUMMER;
         this.seasonEffects = seasonEffects;
     }
 
@@ -43,12 +46,10 @@ public class SeasonsManager {
     }
 
     private void rotateSeason(){
-        int nextOrdinal = (currentSeason.ordinal() + 1) % SeasonsList.Seasons.values().length;
-        currentSeason = SeasonsList.Seasons.values()[nextOrdinal];
+        int nextOrdinal = (currentSeason.ordinal() + 1) % SeasonsList.values().length;
+        currentSeason = SeasonsList.values()[nextOrdinal];
         applySeasonEffects();
-        if (scheduleSeasonChangeTask == null || scheduleSeasonChangeTask.isCancelled()) {
-            scheduleSeasonChange();
-        }
+        scheduleSeasonChange();
     }
 
     private void applySeasonEffects() {
@@ -58,24 +59,14 @@ public class SeasonsManager {
             seasonChangeMessage = seasonChangeMessage.replace("%SeasonName%", getCurrentSeason().getName());
             Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', seasonChangeMessage));
 
-            Bukkit.getWorlds().forEach(world -> {
-                world.getPlayers().forEach(player -> {
-                    switch (currentSeason) {
-                        case WINTER:
-                            seasonEffects.applyWinterEffects(player);
-                            break;
-                        case SPRING:
-                            seasonEffects.applySpringEffects(player);
-                            break;
-                        case SUMMER:
-                            seasonEffects.cancelAndRemoveTasks();
-                            break;
-                        case AUTUMN:
-                            seasonEffects.applyAutumnEffects(player);
-                            break;
-                    }
-                });
-            });
+            Bukkit.getWorlds().forEach(world -> world.getPlayers().forEach(player -> {
+                switch (currentSeason) {
+                    case WINTER -> seasonEffects.applyWinterEffects(player);
+                    case SPRING -> seasonEffects.applySpringEffects(player);
+                    case SUMMER -> seasonEffects.cancelAndRemoveTasks();
+                    case AUTUMN -> seasonEffects.applyAutumnEffects(player);
+                }
+            }));
         } else {
             Bukkit.getLogger().log(Level.WARNING, "Season change message is null. Make sure the configuration value is set correctly.");
         }
@@ -88,7 +79,7 @@ public class SeasonsManager {
         }
     }
 
-    public SeasonsList.Seasons getCurrentSeason(){
+    public SeasonsList getCurrentSeason(){
         return currentSeason;
     }
 }

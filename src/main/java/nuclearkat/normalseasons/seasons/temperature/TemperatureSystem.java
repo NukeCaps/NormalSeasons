@@ -16,11 +16,14 @@ import java.util.logging.Level;
 
 public class TemperatureSystem {
 
-    private static final NormalSeasons seasons = NormalSeasons.getPlugin(NormalSeasons.class);
+    private final NormalSeasons seasons;
 
-    public static double getBiomeTemperature(Biome biome, SeasonsList.Seasons season) {
-        HashMap<Biome, double[]> biomeTemperatureMap = season.getBiomeTemperatureMap();
-        double[] temperatureRange = biomeTemperatureMap.get(biome);
+    public TemperatureSystem(NormalSeasons seasons){
+        this.seasons = seasons;
+    }
+
+    public double getBiomeTemperature(Biome biome, SeasonsList season) {
+        double[] temperatureRange = season.getTemperatureForBiome(biome);
 
         if (temperatureRange != null) {
             return (temperatureRange[0] + temperatureRange[1]) / 2.0;
@@ -29,9 +32,9 @@ public class TemperatureSystem {
         }
     }
 
-    private static final HashMap<Material, Double> heatSources = new HashMap<>();
+    private final HashMap<Material, Double> heatSources = new HashMap<>();
 
-    public static void loadHeatSources() {
+    public void loadHeatSources() {
         ConfigurationSection heatSourcesSection = seasons.getConfig().getConfigurationSection("season.heat_sources");
 
         if (heatSourcesSection != null) {
@@ -47,7 +50,7 @@ public class TemperatureSystem {
         }
     }
 
-    public static double calculateHeatSourceEffect(Player player) {
+    public double calculateHeatSourceEffect(Player player) {
         World world = player.getWorld();
         double heatEffect = 0.0;
         int searchRadius = seasons.getConfig().getInt("season.util.heat_detection_radius");
@@ -65,7 +68,7 @@ public class TemperatureSystem {
         return heatEffect;
     }
 
-    public static double getDefaultTemperature(SeasonsList.Seasons season) {
+    public double getDefaultTemperature(SeasonsList season) {
         switch (season) {
             case WINTER:
                 return seasons.getConfig().getDouble("season.winter.default_temperature");

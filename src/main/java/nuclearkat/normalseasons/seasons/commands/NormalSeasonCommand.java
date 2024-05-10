@@ -46,7 +46,7 @@ public class NormalSeasonCommand implements CommandExecutor {
 
                     case "seasons":
 
-                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getString("season.seasons_list_message").replace("%Seasons%", Arrays.toString(SeasonsList.Seasons.values()))));
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', NormalSeasons.getPlugin(NormalSeasons.class).getConfig().getString("season.seasons_list_message").replace("%Seasons%", Arrays.toString(SeasonsList.values()))));
                         return true;
 
                     case "toggle":

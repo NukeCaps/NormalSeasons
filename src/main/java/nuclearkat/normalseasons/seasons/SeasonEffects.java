@@ -60,6 +60,9 @@ public class SeasonEffects {
     }
 
     private void spawnRandomizedParticles(Player player, Particle particleEffect) {
+        if (playerToggleVisuals.contains(player)) {
+            return;
+        }
         for (int i = 0; i < PARTICLE_SPAWNS_COUNT; i++) {
             randomParticleTask = new BukkitRunnable() {
                 @Override
@@ -79,7 +82,7 @@ public class SeasonEffects {
                             break;
                     }
                 }
-            }.runTaskLaterAsynchronously(NormalSeasons.getPlugin(NormalSeasons.class), random.nextInt(11));
+            }.runTaskLater(seasons, random.nextInt(11));
         }
     }
 
@@ -95,7 +98,7 @@ public class SeasonEffects {
                     Vector autumnOffset = randomAutumnOffset();
                     player.spawnParticle(particleEffect, player.getLocation().add(autumnOffset), AUTUMN_PARTICLES_TO_SPAWN, 2, -4.5, 0);
                 }
-            }.runTaskLaterAsynchronously(NormalSeasons.getPlugin(NormalSeasons.class), random.nextInt(21));
+            }.runTaskLater(seasons, random.nextInt(21));
         }
     }
 
@@ -115,9 +118,6 @@ public class SeasonEffects {
     }
 
     public void applyWinterEffects(Player player) {
-        if (playerToggleVisuals.contains(player)) {
-            return;
-        }
         winterTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -127,15 +127,12 @@ public class SeasonEffects {
                 if (isPlayerInWater(player)){
                     return;
                 }
-                spawnRandomizedParticles(player, SeasonsList.Seasons.WINTER.getParticleEffect());
+                spawnRandomizedParticles(player, SeasonsList.WINTER.getParticleEffect());
             }
-        }.runTaskTimerAsynchronously(NormalSeasons.getPlugin(NormalSeasons.class), 0, 10);
+        }.runTaskTimer(seasons, 0, 10);
     }
 
     public void applySpringEffects(Player player) {
-        if (playerToggleVisuals.contains(player)) {
-            return;
-        }
         springTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -145,18 +142,18 @@ public class SeasonEffects {
                 if (isPlayerInWater(player)){
                     return;
                 }
-                spawnRandomizedParticles(player, SeasonsList.Seasons.SPRING.getParticleEffect());
+                spawnRandomizedParticles(player, SeasonsList.SPRING.getParticleEffect());
             }
-        }.runTaskTimerAsynchronously(NormalSeasons.getPlugin(NormalSeasons.class), 0, 10);
+        }.runTaskTimer(seasons, 0, 10);
     }
 
     public void applyAutumnEffects(Player player) {
-        if (playerToggleVisuals.contains(player)) {
-            return;
-        }
         autumnTask = new BukkitRunnable() {
             @Override
             public void run() {
+                if (playerToggleVisuals.contains(player)){
+                    return;
+                }
                 if (isPlayerInWater(player)){
                     return;
                 }
@@ -174,10 +171,10 @@ public class SeasonEffects {
                         }
                 }
                 if (underTree) {
-                    spawnRandomizedAutumnParticles(player, SeasonsList.Seasons.AUTUMN.getParticleEffect());
+                    spawnRandomizedAutumnParticles(player, SeasonsList.AUTUMN.getParticleEffect());
                 }
             }
-        }.runTaskTimerAsynchronously(NormalSeasons.getPlugin(NormalSeasons.class), 0, 10);
+        }.runTaskTimer(seasons, 0, 10);
     }
 
     public void cancelAndRemoveTasks(){

@@ -40,7 +40,6 @@ public class TemperatureEffects {
     }
 
     public void applyColdEffect(Player player) {
-
         applyColdEffect = new BukkitRunnable() {
             @Override
             public void run() {
