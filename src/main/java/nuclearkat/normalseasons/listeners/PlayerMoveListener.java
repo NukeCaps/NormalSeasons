@@ -1,8 +1,8 @@
-package nuclearkat.normalseasons.seasons.events;
+package nuclearkat.normalseasons.listeners;
 
 import nuclearkat.normalseasons.NormalSeasons;
-import nuclearkat.normalseasons.seasons.SeasonsManager;
-import nuclearkat.normalseasons.seasons.temperature.TemperatureSystem;
+import nuclearkat.normalseasons.SeasonsManager;
+import nuclearkat.normalseasons.temperature.TemperatureSystem;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;

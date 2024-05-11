@@ -1,6 +1,5 @@
-package nuclearkat.normalseasons.seasons;
+package nuclearkat.normalseasons;
 
-import nuclearkat.normalseasons.NormalSeasons;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -8,23 +7,15 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.logging.Level;
 
-public class SeasonsManager {
+public class SeasonsManager extends BukkitRunnable{
 
     private final NormalSeasons seasons;
     private SeasonsList currentSeason;
     private final int seasonDurationTicks;
     private BukkitTask scheduleSeasonChangeTask;
     private final SeasonEffects seasonEffects;
-    private static SeasonsManager instance;
 
-    public static SeasonsManager getInstance(SeasonEffects seasonEffects, NormalSeasons seasons){
-        if (instance == null){
-            instance = new SeasonsManager(seasonEffects, seasons);
-        }
-        return instance;
-    }
-
-    private SeasonsManager(SeasonEffects seasonEffects, NormalSeasons seasons){
+    public SeasonsManager(SeasonEffects seasonEffects, NormalSeasons seasons){
         this.seasons = seasons;
         this.seasonDurationTicks = seasons.getConfig().getInt("season.season_duration_ticks");
         SeasonsList.initializeBiomeTemperature();
@@ -46,7 +37,7 @@ public class SeasonsManager {
         int nextOrdinal = (currentSeason.ordinal() + 1) % SeasonsList.values().length;
         currentSeason = SeasonsList.values()[nextOrdinal];
         applySeasonEffects();
-        scheduleSeasonChange();
+        run();
     }
 
     private void applySeasonEffects() {
@@ -78,5 +69,11 @@ public class SeasonsManager {
 
     public SeasonsList getCurrentSeason(){
         return currentSeason;
+    }
+
+    @Override
+    public void run() {
+        seasonEffects.cancelAndRemoveTasks();
+        rotateSeason();
     }
 }

@@ -1,4 +1,4 @@
-package nuclearkat.normalseasons.seasons.events;
+package nuclearkat.normalseasons.listeners;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;

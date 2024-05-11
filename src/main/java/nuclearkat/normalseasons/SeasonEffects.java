@@ -1,6 +1,5 @@
-package nuclearkat.normalseasons.seasons;
+package nuclearkat.normalseasons;
 
-import nuclearkat.normalseasons.NormalSeasons;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Tag;

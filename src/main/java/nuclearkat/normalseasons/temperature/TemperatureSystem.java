@@ -1,7 +1,7 @@
-package nuclearkat.normalseasons.seasons.temperature;
+package nuclearkat.normalseasons.temperature;
 
 import nuclearkat.normalseasons.NormalSeasons;
-import nuclearkat.normalseasons.seasons.SeasonsList;
+import nuclearkat.normalseasons.SeasonsList;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;

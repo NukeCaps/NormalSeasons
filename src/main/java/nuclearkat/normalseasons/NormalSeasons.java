@@ -1,17 +1,21 @@
 package nuclearkat.normalseasons;
 
-import nuclearkat.normalseasons.seasons.SeasonsManager;
-import nuclearkat.normalseasons.seasons.commands.NormalSeasonCommand;
-import nuclearkat.normalseasons.seasons.events.PlayerJoinListener;
-import nuclearkat.normalseasons.seasons.events.PlayerMoveListener;
-import nuclearkat.normalseasons.seasons.events.TemperatureEventListener;
-import nuclearkat.normalseasons.seasons.SeasonEffects;
-import nuclearkat.normalseasons.seasons.temperature.TemperatureEffects;
-import nuclearkat.normalseasons.seasons.temperature.TemperatureSystem;
+import nuclearkat.normalseasons.commands.NormalSeasonCommand;
+import nuclearkat.normalseasons.listeners.PlayerJoinListener;
+import nuclearkat.normalseasons.listeners.PlayerMoveListener;
+import nuclearkat.normalseasons.listeners.TemperatureEventListener;
+import nuclearkat.normalseasons.temperature.TemperatureEffects;
+import nuclearkat.normalseasons.temperature.TemperatureSystem;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class NormalSeasons extends JavaPlugin {
+
+    private final SeasonEffects seasonEffects = new SeasonEffects(this);
+    private final SeasonsManager seasonsManager = new SeasonsManager(seasonEffects, this);
+    private final TemperatureEffects temperatureEffects = new TemperatureEffects(this);
+    private final TemperatureSystem temperatureSystem = new TemperatureSystem(this);
+    private final TemperatureEventListener temperatureEventListener = new TemperatureEventListener(this, temperatureEffects, seasonsManager, temperatureSystem);
 
     @Override
     public void onEnable() {
@@ -32,9 +36,6 @@ public final class NormalSeasons extends JavaPlugin {
     }
 
     private void loadConfig(){
-        if (!getDataFolder().exists()) {
-            getDataFolder().mkdirs();
-        }
         saveDefaultConfig();
         addDefaultConfigValues();
         reloadConfig();
@@ -79,12 +80,6 @@ public final class NormalSeasons extends JavaPlugin {
         temperatureSystem.loadHeatSources();
     }
 
-    private final SeasonEffects seasonEffects = new SeasonEffects(this);
-    private final SeasonsManager seasonsManager = SeasonsManager.getInstance(seasonEffects, this);
-    private final TemperatureEffects temperatureEffects = new TemperatureEffects(this);
-    private final TemperatureSystem temperatureSystem = new TemperatureSystem(this);
-    private final TemperatureEventListener temperatureEventListener = new TemperatureEventListener(this, temperatureEffects, seasonsManager, temperatureSystem);
-
     private void startMainTasks(){
         seasonsManager.scheduleSeasonChange();
         temperatureEventListener.startTemperatureCacheTask();
@@ -100,6 +95,6 @@ public final class NormalSeasons extends JavaPlugin {
     @Override
     public void onDisable() {
         cancelTasks();
-        Bukkit.getScheduler().cancelTasks(this);
+
     }
 }

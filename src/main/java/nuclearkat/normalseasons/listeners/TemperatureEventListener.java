@@ -1,9 +1,9 @@
-package nuclearkat.normalseasons.seasons.events;
+package nuclearkat.normalseasons.listeners;
 
 import nuclearkat.normalseasons.NormalSeasons;
-import nuclearkat.normalseasons.seasons.SeasonsManager;
-import nuclearkat.normalseasons.seasons.temperature.TemperatureEffects;
-import nuclearkat.normalseasons.seasons.temperature.TemperatureSystem;
+import nuclearkat.normalseasons.SeasonsManager;
+import nuclearkat.normalseasons.temperature.TemperatureEffects;
+import nuclearkat.normalseasons.temperature.TemperatureSystem;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -58,10 +58,12 @@ public class TemperatureEventListener implements Listener {
             @Override
             public void run(){
                 for (Player player : Bukkit.getOnlinePlayers()){
-                    if (temperatureCache.get(player.getUniqueId()) == null){
-                        temperatureCache.put(player.getUniqueId(), temperatureSystem.getDefaultTemperature(seasonsManager.getCurrentSeason()));
-                        emitTemperatureChange(player, temperatureCache.get(player.getUniqueId()), temperatureSystem.getDefaultTemperature(seasonsManager.getCurrentSeason()));
-                    }
+                    temperatureCache.computeIfAbsent(player.getUniqueId(), uuid -> {
+                        double defaultTemp = temperatureSystem.getDefaultTemperature(seasonsManager.getCurrentSeason());
+                        emitTemperatureChange(player, defaultTemp, defaultTemp);
+                        return defaultTemp;
+                    });
+
                     double currentTemp = temperatureSystem.calculatePlayerTemperature(player.getWorld().getBiome(player.getLocation()), seasonsManager.getCurrentSeason(), player);
                     temperatureCache.put(player.getUniqueId(), currentTemp);
                 }

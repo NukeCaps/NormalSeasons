@@ -1,4 +1,4 @@
-package nuclearkat.normalseasons.seasons;
+package nuclearkat.normalseasons;
 
 import org.bukkit.Particle;
 import org.bukkit.block.Biome;

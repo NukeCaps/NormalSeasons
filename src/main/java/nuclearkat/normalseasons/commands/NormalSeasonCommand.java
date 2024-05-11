@@ -1,9 +1,9 @@
-package nuclearkat.normalseasons.seasons.commands;
+package nuclearkat.normalseasons.commands;
 
 import nuclearkat.normalseasons.NormalSeasons;
-import nuclearkat.normalseasons.seasons.SeasonsList;
-import nuclearkat.normalseasons.seasons.SeasonsManager;
-import nuclearkat.normalseasons.seasons.SeasonEffects;
+import nuclearkat.normalseasons.SeasonsList;
+import nuclearkat.normalseasons.SeasonsManager;
+import nuclearkat.normalseasons.SeasonEffects;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
