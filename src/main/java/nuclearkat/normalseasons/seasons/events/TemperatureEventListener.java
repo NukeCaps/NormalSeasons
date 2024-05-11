@@ -1,14 +1,10 @@
 package nuclearkat.normalseasons.seasons.events;
 
 import nuclearkat.normalseasons.NormalSeasons;
-import nuclearkat.normalseasons.seasons.SeasonsList;
 import nuclearkat.normalseasons.seasons.SeasonsManager;
 import nuclearkat.normalseasons.seasons.temperature.TemperatureEffects;
 import nuclearkat.normalseasons.seasons.temperature.TemperatureSystem;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.block.Biome;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,7 +16,8 @@ import java.util.UUID;
 
 public class TemperatureEventListener implements Listener {
     private final HashMap<UUID, Double> temperatureCache = new HashMap<>();
-    private BukkitTask temperatureUpdateTask;
+    private BukkitTask temperatureCacheTask;
+    private BukkitTask emitTemperatureChangeTask;
     private final NormalSeasons seasons;
     private final TemperatureEffects temperatureEffects;
     private final SeasonsManager seasonsManager;
@@ -37,18 +34,14 @@ public class TemperatureEventListener implements Listener {
     public void onTemperatureChange(PlayerTemperatureChangeEvent event){
         Player player = event.getPlayer();
         double newTemperature = event.getTemperature();
-        updatePlayerTemperature(player, newTemperature);
-        player.setWalkSpeed(1.0f);
-        System.out.println("Temperature Change Event triggered");
+        handleTemperatureUpdate(player, newTemperature);
     }
 
-    private void updatePlayerTemperature(Player player, double newTemperature){
-        temperatureEffects.cancelTaskEffects();
-
+    private void handleTemperatureUpdate(Player player, double newTemperature){
+        temperatureEffects.cancelAndRemoveTaskEffects();
+        emitTemperatureChange(player, temperatureCache.getOrDefault(player.getUniqueId(), 0.0), newTemperature);
         if (newTemperature < seasons.getConfig().getDouble("season.util.freeze_threshold")) {
             temperatureEffects.applyFreezingEffect(player);
-            player.setWalkSpeed(1.0f);
-            System.out.println("Freezing effect applied!");
         } else if (newTemperature < seasons.getConfig().getDouble("season.util.cold_threshold")) {
             temperatureEffects.applyColdEffect(player);
         } else if (newTemperature > seasons.getConfig().getDouble("season.util.sweat_threshold")) {
@@ -60,72 +53,52 @@ public class TemperatureEventListener implements Listener {
         }
     }
 
-    public void startTemperatureUpdateTask(){
-        temperatureUpdateTask = new BukkitRunnable() {
+    public void startTemperatureCacheTask(){
+        temperatureCacheTask = new BukkitRunnable() {
             @Override
             public void run(){
                 for (Player player : Bukkit.getOnlinePlayers()){
                     if (temperatureCache.get(player.getUniqueId()) == null){
                         temperatureCache.put(player.getUniqueId(), temperatureSystem.getDefaultTemperature(seasonsManager.getCurrentSeason()));
+                        emitTemperatureChange(player, temperatureCache.get(player.getUniqueId()), temperatureSystem.getDefaultTemperature(seasonsManager.getCurrentSeason()));
                     }
-                    emitTemperatureChange(player, temperatureCache.getOrDefault(player.getUniqueId(), 0.0), calculatePlayerTemperature(player.getWorld().getBiome(player.getLocation()), seasonsManager.getCurrentSeason(), player));
-
+                    double currentTemp = temperatureSystem.calculatePlayerTemperature(player.getWorld().getBiome(player.getLocation()), seasonsManager.getCurrentSeason(), player);
+                    temperatureCache.put(player.getUniqueId(), currentTemp);
                 }
             }
         }.runTaskTimer(seasons, 5, 100);
     }
 
     private void emitTemperatureChange(Player player, double oldTemp, double tempTarget) {
-        final double currentTemp = oldTemp;
-        new BukkitRunnable() {
+        if (emitTemperatureChangeTask != null){
+            emitTemperatureChangeTask.cancel();
+        }
+        emitTemperatureChangeTask = new BukkitRunnable() {
+            double updatedTemp = oldTemp;
+            final double increment = (tempTarget > oldTemp) ? 1.0 : -1.0;
+
             @Override
             public void run() {
-                double updatedTemp = currentTemp;
-                double increment = (tempTarget > currentTemp) ? 1.0 : -1.0;
                 temperatureEffects.displayTemperature(player, updatedTemp);
+                updatedTemp += increment;
 
-                if ((increment > 0 && updatedTemp >= tempTarget) || (increment < 0 && updatedTemp <= tempTarget)) {
-                    temperatureEffects.displayTemperature(player, updatedTemp);
-
-                    Bukkit.getServer().getPluginManager().callEvent(new PlayerTemperatureChangeEvent(player, tempTarget));
-
+                if (increment > 0 && updatedTemp >= tempTarget || increment < 0 && updatedTemp <= tempTarget) {
+                    temperatureEffects.displayTemperature(player, tempTarget);
                     this.cancel();
-                } else {
-                    updatedTemp += increment;
-                    temperatureEffects.displayTemperature(player, updatedTemp);
                 }
             }
-        }.runTaskTimer(seasons, 0, 20);
-    }
-
-    private double calculatePlayerTemperature(Biome biome, SeasonsList season, Player player) {
-        double baseTemperature = temperatureSystem.getBiomeTemperature(biome, season);
-        double temperature = baseTemperature + temperatureSystem.calculateHeatSourceEffect(player);
-        boolean isStorming = player.getWorld().hasStorm();
-        boolean isPlayerInWater = isPlayerInWater(player);
-
-        if (isStorming || isPlayerInWater) {
-            temperature -= switch (season) {
-                case SPRING -> isPlayerInWater ? 5 : 8;
-                case SUMMER -> isPlayerInWater ? 4 : 7;
-                case AUTUMN -> isPlayerInWater ? 6 : 9;
-                case WINTER -> isPlayerInWater ? 9 : 11;
-            };
-            Bukkit.getPluginManager().callEvent(new PlayerTemperatureChangeEvent(player, temperature));
-        }
-
-        return temperature;
-    }
-
-    private boolean isPlayerInWater(Player player){
-        Block feetBlock = player.getLocation().getBlock();
-        return feetBlock.getType() == Material.WATER;
+        }.runTaskTimer(seasons, 0, 10);
     }
 
     public void cancelTask(){
-        if (temperatureUpdateTask != null){
-            temperatureUpdateTask.cancel();
-            temperatureUpdateTask = null;
+        if (temperatureCacheTask != null){
+            temperatureCacheTask.cancel();
+            temperatureCacheTask = null;
+            temperatureCache.clear();
+        }
+        if (emitTemperatureChangeTask != null){
+            emitTemperatureChangeTask.cancel();
+            emitTemperatureChangeTask = null;
         }
     }
 }

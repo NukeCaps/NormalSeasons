@@ -3,6 +3,7 @@ package nuclearkat.normalseasons;
 import nuclearkat.normalseasons.seasons.SeasonsManager;
 import nuclearkat.normalseasons.seasons.commands.NormalSeasonCommand;
 import nuclearkat.normalseasons.seasons.events.PlayerJoinListener;
+import nuclearkat.normalseasons.seasons.events.PlayerMoveListener;
 import nuclearkat.normalseasons.seasons.events.TemperatureEventListener;
 import nuclearkat.normalseasons.seasons.SeasonEffects;
 import nuclearkat.normalseasons.seasons.temperature.TemperatureEffects;
@@ -27,6 +28,7 @@ public final class NormalSeasons extends JavaPlugin {
     private void registerListeners(){
         Bukkit.getPluginManager().registerEvents(temperatureEventListener, this);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(temperatureSystem, seasonsManager), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerMoveListener(this, temperatureSystem, seasonsManager), this);
     }
 
     private void loadConfig(){
@@ -85,12 +87,12 @@ public final class NormalSeasons extends JavaPlugin {
 
     private void startMainTasks(){
         seasonsManager.scheduleSeasonChange();
-        temperatureEventListener.startTemperatureUpdateTask();
+        temperatureEventListener.startTemperatureCacheTask();
     }
 
     private void cancelTasks(){
         seasonEffects.cancelAndRemoveTasks();
-        temperatureEffects.removeTasks();
+        temperatureEffects.cancelAndRemoveTaskEffects();
         temperatureEventListener.cancelTask();
         seasonsManager.cancelTasks();
     }

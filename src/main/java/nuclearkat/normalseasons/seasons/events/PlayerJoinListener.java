@@ -22,7 +22,5 @@ public class PlayerJoinListener implements Listener {
     public void onJoin(PlayerJoinEvent event){
         Player player = event.getPlayer();
         Bukkit.getServer().getPluginManager().callEvent(new PlayerTemperatureChangeEvent(player, temperatureSystem.getDefaultTemperature(seasonsManager.getCurrentSeason())));
-        player.setWalkSpeed(1.0f);
     }
-
 }

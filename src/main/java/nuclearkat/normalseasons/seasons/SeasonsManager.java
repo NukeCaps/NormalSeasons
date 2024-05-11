@@ -1,10 +1,8 @@
 package nuclearkat.normalseasons.seasons;
 
 import nuclearkat.normalseasons.NormalSeasons;
-import nuclearkat.normalseasons.seasons.events.PlayerTemperatureChangeEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -17,7 +15,6 @@ public class SeasonsManager {
     private final int seasonDurationTicks;
     private BukkitTask scheduleSeasonChangeTask;
     private final SeasonEffects seasonEffects;
-
     private static SeasonsManager instance;
 
     public static SeasonsManager getInstance(SeasonEffects seasonEffects, NormalSeasons seasons){

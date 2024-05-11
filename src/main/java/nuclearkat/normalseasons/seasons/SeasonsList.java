@@ -1,6 +1,5 @@
 package nuclearkat.normalseasons.seasons;
 
-import nuclearkat.normalseasons.NormalSeasons;
 import org.bukkit.Particle;
 import org.bukkit.block.Biome;
 
@@ -47,7 +46,7 @@ public enum SeasonsList {
                 setBiomeTemperature(Biome.DESERT, 14, 24);
             }
             case WINTER -> {
-                setBiomeTemperature(Biome.PLAINS, -5, 5);
+                setBiomeTemperature(Biome.PLAINS, -6, 5);
                 setBiomeTemperature(Biome.FOREST, -8, 2);
                 setBiomeTemperature(Biome.DESERT, 0, 10);
             }

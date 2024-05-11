@@ -68,18 +68,11 @@ public class SeasonEffects {
                 @Override
                 public void run() {
                     Vector offset = randomOffset();
-                    if (player.getWorld().hasStorm()){
-                        setWorldStormFalse(player);
-                    }
                     switch (particleEffect) {
-
-                        case FALLING_DRIPSTONE_WATER:
-                            player.spawnParticle(particleEffect, player.getLocation().add(offset), SPRING_PARTICLES_TO_SPAWN, 2, -2, 2);
-                            break;
-
-                        case SNOWBALL:
-                            player.spawnParticle(particleEffect, player.getLocation().add(offset), WINTER_PARTICLES_TO_SPAWN, 2, -4, 2);
-                            break;
+                        case FALLING_DRIPSTONE_WATER ->
+                                player.spawnParticle(particleEffect, player.getLocation().add(offset), SPRING_PARTICLES_TO_SPAWN, 2, -2, 2);
+                        case SNOWBALL ->
+                                player.spawnParticle(particleEffect, player.getLocation().add(offset), WINTER_PARTICLES_TO_SPAWN, 2, -4, 2);
                     }
                 }
             }.runTaskLater(seasons, random.nextInt(11));
@@ -90,16 +83,13 @@ public class SeasonEffects {
         if (playerToggleVisuals.contains(player)) {
             return;
         }
-        setWorldStormFalse(player);
-        for (int i = 0; i < PARTICLE_SPAWNS_COUNT; i++) {
-            randomAutumnParticleTask = new BukkitRunnable(){
-                @Override
-                public void run(){
-                    Vector autumnOffset = randomAutumnOffset();
-                    player.spawnParticle(particleEffect, player.getLocation().add(autumnOffset), AUTUMN_PARTICLES_TO_SPAWN, 2, -4.5, 0);
-                }
-            }.runTaskLater(seasons, random.nextInt(21));
-        }
+        randomAutumnParticleTask = new BukkitRunnable(){
+            @Override
+            public void run(){
+                Vector autumnOffset = randomAutumnOffset();
+                player.spawnParticle(particleEffect, player.getLocation().add(autumnOffset), AUTUMN_PARTICLES_TO_SPAWN, 1, -2.5, 0.5);
+            }
+        }.runTaskLater(seasons, random.nextInt(21));
     }
 
     private boolean isPlayerInWater(Player player){
@@ -107,22 +97,12 @@ public class SeasonEffects {
         return feetBlock.getType() == Material.WATER;
     }
 
-    private void setWorldStormFalse(Player player){
-        new BukkitRunnable() {
-            @Override
-            public void run(){
-                player.getWorld().setStorm(false);
-            }
-
-        }.runTask(seasons);
-    }
-
     public void applyWinterEffects(Player player) {
         winterTask = new BukkitRunnable() {
             @Override
             public void run() {
                 if (player.getWorld().hasStorm()){
-                    setWorldStormFalse(player);
+
                 }
                 if (isPlayerInWater(player)){
                     return;
@@ -137,7 +117,7 @@ public class SeasonEffects {
             @Override
             public void run() {
                 if (player.getWorld().hasStorm()){
-                    setWorldStormFalse(player);
+
                 }
                 if (isPlayerInWater(player)){
                     return;

@@ -32,6 +32,28 @@ public class TemperatureSystem {
         }
     }
 
+    public double calculatePlayerTemperature(Biome biome, SeasonsList season, Player player) {
+        double baseTemperature = getBiomeTemperature(biome, season);
+        double temperature = baseTemperature + calculateHeatSourceEffect(player);
+        boolean isStorming = player.getWorld().hasStorm();
+        boolean isPlayerInWater = isPlayerInWater(player);
+
+        if (isStorming || isPlayerInWater) {
+            temperature -= switch (season) {
+                case SPRING -> isPlayerInWater ? -5 : -8;
+                case SUMMER -> isPlayerInWater ? -4 : -7;
+                case AUTUMN -> isPlayerInWater ? -6 : -9;
+                case WINTER -> isPlayerInWater ? -9 : -11;
+            };
+        }
+        return temperature;
+    }
+
+    private boolean isPlayerInWater(Player player){
+        Block feetBlock = player.getLocation().getBlock();
+        return feetBlock.getType() == Material.WATER;
+    }
+
     private final HashMap<Material, Double> heatSources = new HashMap<>();
 
     public void loadHeatSources() {
@@ -61,7 +83,11 @@ public class TemperatureSystem {
                     Location currentLocation = player.getLocation().add(x, y, z);
                     Block block = world.getBlockAt(currentLocation);
                     Material material = block.getType();
-                    heatEffect += heatSources.getOrDefault(material, 0D);
+                    double heatSourceValue = heatSources.getOrDefault(material, 0D);
+                    double distance = player.getLocation().distance(currentLocation);
+                    double distanceEffect = 1.0 / (distance + 1);
+
+                    heatEffect += heatSourceValue * distanceEffect;
                 }
             }
         }

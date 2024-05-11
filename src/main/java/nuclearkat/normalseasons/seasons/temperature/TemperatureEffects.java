@@ -34,9 +34,10 @@ public class TemperatureEffects {
         applyFreezingEffect = new BukkitRunnable() {
             @Override
             public void run() {
+                player.setWalkSpeed(0.09f);
                 player.spawnParticle(Particle.SNOWFLAKE, player.getLocation(), 5, 0.5, 0.5, 0.5);
             }
-        }.runTaskAsynchronously(seasons);
+        }.runTaskTimer(seasons, 0, 100);
     }
 
     public void applyColdEffect(Player player) {
@@ -45,7 +46,7 @@ public class TemperatureEffects {
             public void run() {
                 player.spawnParticle(Particle.WHITE_SMOKE, player.getLocation().add(0, 1.6, 0), 5, 0, -0.5, 0);
             }
-        }.runTaskTimerAsynchronously(seasons, 5, 100);
+        }.runTaskTimer(seasons, 5, 100);
     }
 
     public void applyRegenerationEffect(Player player) {
@@ -55,7 +56,7 @@ public class TemperatureEffects {
                 player.addPotionEffect(PotionEffectType.REGENERATION.createEffect(40, 1));
                 player.spawnParticle(Particle.HEART, player.getLocation(), 1, 0.2, 0.2, 0.2);
             }
-        }.runTask(seasons);
+        }.runTaskTimer(seasons, 0, 35);
     }
 
     public void applySweatEffect(Player player) {
@@ -64,40 +65,38 @@ public class TemperatureEffects {
             public void run() {
                 player.spawnParticle(Particle.WATER_DROP, player.getLocation().add(0, 1.6, 0), 3, 0.1, 0.2, 0.1);
             }
-        }.runTaskTimerAsynchronously(seasons, 5, 100);
+        }.runTaskTimer(seasons, 5, 100);
     }
 
     public void applyFireDamage(Player player) {
         applyFireEffect = new BukkitRunnable() {
             @Override
             public void run() {
-                player.setFireTicks(40);
+                player.setFireTicks(20);
             }
-        }.runTask(seasons);
+        }.runTaskTimer(seasons, 0, 60);
     }
 
-    public void cancelTaskEffects() {
+    public void cancelAndRemoveTaskEffects() {
         if (applyFreezingEffect != null) {
             applyFreezingEffect.cancel();
+            applyFreezingEffect = null;
         }
         if (applyColdEffect != null) {
             applyColdEffect.cancel();
+            applyColdEffect = null;
         }
         if (applyFireEffect != null) {
             applyFireEffect.cancel();
+            applyFireEffect = null;
         }
         if (applySweatEffect != null) {
             applySweatEffect.cancel();
+            applySweatEffect = null;
         }
-        if (applyRegenerationEffect != null) {
+        if (applyRegenerationEffect != null){
             applyRegenerationEffect.cancel();
+            applyRegenerationEffect = null;
         }
-    }
-    public void removeTasks(){
-        applyFreezingEffect = null;
-        applyColdEffect = null;
-        applySweatEffect = null;
-        applyFireEffect = null;
-        applyRegenerationEffect = null;
     }
 }
