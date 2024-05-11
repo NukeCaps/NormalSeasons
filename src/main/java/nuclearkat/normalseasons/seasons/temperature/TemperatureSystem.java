@@ -95,17 +95,11 @@ public class TemperatureSystem {
     }
 
     public double getDefaultTemperature(SeasonsList season) {
-        switch (season) {
-            case WINTER:
-                return seasons.getConfig().getDouble("season.winter.default_temperature");
-            case SPRING:
-                return seasons.getConfig().getDouble("season.spring.default_temperature");
-            case SUMMER:
-                return seasons.getConfig().getDouble("season.summer.default_temperature");
-            case AUTUMN:
-                return seasons.getConfig().getDouble("season.autumn.default_temperature");
-            default:
-                return 0;
-        }
+        return switch (season) {
+            case WINTER -> seasons.getConfig().getDouble("season.winter.default_temperature");
+            case SPRING -> seasons.getConfig().getDouble("season.spring.default_temperature");
+            case SUMMER -> seasons.getConfig().getDouble("season.summer.default_temperature");
+            case AUTUMN -> seasons.getConfig().getDouble("season.autumn.default_temperature");
+        };
     }
 }

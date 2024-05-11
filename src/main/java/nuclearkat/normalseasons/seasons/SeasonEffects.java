@@ -60,9 +60,6 @@ public class SeasonEffects {
     }
 
     private void spawnRandomizedParticles(Player player, Particle particleEffect) {
-        if (playerToggleVisuals.contains(player)) {
-            return;
-        }
         for (int i = 0; i < PARTICLE_SPAWNS_COUNT; i++) {
             randomParticleTask = new BukkitRunnable() {
                 @Override
@@ -80,9 +77,6 @@ public class SeasonEffects {
     }
 
     private void spawnRandomizedAutumnParticles(Player player, Particle particleEffect) {
-        if (playerToggleVisuals.contains(player)) {
-            return;
-        }
         randomAutumnParticleTask = new BukkitRunnable(){
             @Override
             public void run(){
@@ -101,8 +95,8 @@ public class SeasonEffects {
         winterTask = new BukkitRunnable() {
             @Override
             public void run() {
-                if (player.getWorld().hasStorm()){
-
+                if (playerToggleVisuals.contains(player)){
+                    return;
                 }
                 if (isPlayerInWater(player)){
                     return;
@@ -116,8 +110,8 @@ public class SeasonEffects {
         springTask = new BukkitRunnable() {
             @Override
             public void run() {
-                if (player.getWorld().hasStorm()){
-
+                if (playerToggleVisuals.contains(player)){
+                    return;
                 }
                 if (isPlayerInWater(player)){
                     return;
