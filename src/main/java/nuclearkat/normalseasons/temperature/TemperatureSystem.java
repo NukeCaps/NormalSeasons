@@ -39,7 +39,7 @@ public class TemperatureSystem {
         boolean isPlayerInWater = isPlayerInWater(player);
 
         if (isStorming || isPlayerInWater) {
-            temperature -= switch (season) {
+            temperature += switch (season) {
                 case SPRING -> isPlayerInWater ? -5 : -8;
                 case SUMMER -> isPlayerInWater ? -4 : -7;
                 case AUTUMN -> isPlayerInWater ? -6 : -9;
